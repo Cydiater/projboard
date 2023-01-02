@@ -15,6 +15,7 @@ import { useState } from 'react';
 import { useMutation } from 'react-query';
 import { showNotification } from '@mantine/notifications';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from './auth';
 
 interface Prop {
     login: boolean,
@@ -49,6 +50,8 @@ export default function LoginOrSignup(prop: Prop) {
             });
         },
     });
+
+    const { do_login } = useAuth();
 
     return (
         <Container size={420} my={40}>
@@ -91,9 +94,15 @@ export default function LoginOrSignup(prop: Prop) {
                     <Checkbox label="I am a student" sx={{ lineHeight: 1 }} checked={isStudent} onChange={e => setIsStudent(e.currentTarget.checked)}/>
                 </Group>}
 
-                {prop.login && <Button fullWidth mt="xl">
-                    Login
-                </Button>}
+                {prop.login && 
+                    <Button 
+                        fullWidth 
+                        mt="xl"
+                        loading={do_login.isLoading}
+                        onClick={() => do_login.mutate({username, password})}
+                    >
+                        Login
+                    </Button>}
 
                 {!prop.login && 
                     <Button 
