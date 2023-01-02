@@ -11,7 +11,7 @@ import {
 } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import { create_user } from './api';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation } from 'react-query';
 import { showNotification } from '@mantine/notifications';
 import { useNavigate } from 'react-router-dom';
@@ -85,10 +85,6 @@ export default function LoginOrSignup(prop: Prop) {
             <Paper withBorder shadow="md" p={30} mt={30} radius="md">
                 <TextInput label="Username" placeholder="Turing" required value={username} onChange={e => setUsername(e.currentTarget.value)}/>
                 <PasswordInput label="Password" placeholder="Your password" required mt="md" value={password} onChange={e => setPassword(e.currentTarget.value)}/>
-
-                {prop.login && <Group position="apart" mt="lg">
-                    <Checkbox label="Remember me" sx={{ lineHeight: 1 }} />
-                </Group>}
 
                 {!prop.login && <Group position="apart" mt="lg">
                     <Checkbox label="I am a student" sx={{ lineHeight: 1 }} checked={isStudent} onChange={e => setIsStudent(e.currentTarget.checked)}/>

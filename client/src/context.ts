@@ -6,14 +6,23 @@ interface User {
 }
 
 function userReducer(state: User, action: any): User {
-    return {
-        ...state,
-        name: state.name + 'x'
+    switch (action.type) {
+        case "set": {
+            return {
+                ...state,
+                ...action.payload,
+            } as User;
+        }
+        case "logout": {
+            return initUser;
+        }
+        default:
+            throw Error("Wrong reducer");
     }
 }
 
 const initUser: User = {
-    name: 'cydiater',
+    name: '',
     is_student: false,
 }
 

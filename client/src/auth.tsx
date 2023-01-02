@@ -1,9 +1,11 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import { configure } from 'axios-hooks';
-import React, { useEffect } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { useMutation, useQuery } from 'react-query';
 import { login, auth_refresh_url } from './api';
+import { UserContext } from './context';
 import { showNotification } from '@mantine/notifications';
+import { useNavigate } from 'react-router-dom';
 
 interface LoginReq {
     username: string;
@@ -12,45 +14,60 @@ interface LoginReq {
 
 interface TokenInfo {
     token: string;
+    name: string;
+    is_student: boolean;
     exp: string;
 }
 
 const AuthContext = React.createContext<any>({});
 
 const loginRequest = async ({username, password}: LoginReq): Promise<TokenInfo> => {
-    const { token, exp } = await login(
+    const { token, exp, name, is_student } = await login(
         username,
         password
     );
-    return { token, exp };
+    return { token, exp, name, is_student };
 };
 
 const refreshRequest = async (): Promise<TokenInfo> => {
-    // it is important that you use axios when fetching the refresh-token, that way we know the cookie
-    // with the refresh-token is included
-    interface AuthRefreshResp {
-        token: string;
-        exp: string,
-    }
-    const resp = await axios.get<AuthRefreshResp>(
+    const resp = await axios.get<TokenInfo>(
         auth_refresh_url
     );
-    const { token, exp } = resp.data;
-    return { token, exp };
+    const { token, exp, name, is_student } = resp.data;
+    return { token, exp, name, is_student };
 };
 
 function AuthProvider(props: any) {
+    const token = localStorage.getItem('token');
     const accessTokenRef = React.useRef<string>();
-    const [_, setTokenExpires] = React.useState<string>();
+    if (token !== null) {
+        accessTokenRef.current = token;
+    }
+    const [_tokenExpires, setTokenExpires] = React.useState<string>();
+    const navigate = useNavigate();
+    const [user, dispatchUser] = useContext(UserContext);
 
-    const loginQuery = useMutation(loginRequest, {
-        onSuccess: (data) => {
-            accessTokenRef.current = data.token;
-            setTokenExpires(data.exp);
+    const authed = (data: TokenInfo) => {
+        accessTokenRef.current = data.token;
+        localStorage.setItem('token', data.token);
+        setTokenExpires(data.exp);
+        if (user.name.length === 0) {
             showNotification({
                 message: "Login succeed",
             });
-        },
+            navigate("/");
+            dispatchUser({
+                type: "set",
+                payload: {
+                    name: data.name,
+                    is_student: data.is_student,
+                }
+            })
+        }
+    }
+
+    const loginQuery = useMutation(loginRequest, {
+        onSuccess: authed,
         onError: (error: Error) => {
             showNotification({
                 color: 'red',
@@ -60,25 +77,10 @@ function AuthProvider(props: any) {
         }
     });
 
-    const enableRefresh: boolean = accessTokenRef.current != undefined && accessTokenRef.current.length > 0;
-
-    const refreshQuery = useQuery({
-        queryFn: refreshRequest,
-        queryKey: ["refresh"],
-        onSuccess: (data: TokenInfo) => {
-            accessTokenRef.current = data.token;
-            setTokenExpires(data.exp);
-        },
-        refetchInterval: 300000,
-        enabled: enableRefresh,
-    });
-
     useEffect(() => {
-        // add authorization token to each request
         axios.interceptors.request.use(
             (config: AxiosRequestConfig): AxiosRequestConfig => {
                 config.headers!.authorization = `Bearer ${accessTokenRef.current}`;
-                // this is important to include the cookies when we are sending the requests to the backend.
                 config.withCredentials = true;
                 return config;
             }
@@ -91,21 +93,29 @@ function AuthProvider(props: any) {
             }
         );
 
-        // configure axios-hooks to use this instance of axios
         configure({ axios });
     }, []);
 
-    const isSuccess = loginQuery.isSuccess || refreshQuery.isSuccess;
-    const isAuthenticated = isSuccess && !!accessTokenRef.current;
-    // if you need a user object you can do something like this.
-    // const user = refreshQuery.data.user || loginQuery.data.user;
+    useQuery({
+        queryFn: refreshRequest,
+        queryKey: ["refresh"],
+        onSuccess: authed,
+        refetchInterval: 1 * 60 * 60 * 1000, // refetch after one hour 
+        enabled: accessTokenRef.current != undefined && accessTokenRef.current.length > 0,
+    });
 
+    const logout = () => {
+        localStorage.removeItem("token");
+        dispatchUser({ 'type': 'logout' });
+        navigate("/");
+        accessTokenRef.current = '';
+    }
 
-    // example on provider
     return (
         <AuthContext.Provider
             value={{
-                isAuthenticated, do_login: loginQuery,
+                do_login: loginQuery,
+                    logout,
             }}
             {...props}
         ></AuthContext.Provider>
@@ -113,12 +123,12 @@ function AuthProvider(props: any) {
 }
 
 const useAuth = () => {
-  const context = React.useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("AuthContext must be within AuthProvider");
-  }
+    const context = React.useContext(AuthContext);
+    if (context === undefined) {
+        throw new Error("AuthContext must be within AuthProvider");
+    }
 
-  return context;
+    return context;
 };
 
 export { useAuth, AuthProvider };
