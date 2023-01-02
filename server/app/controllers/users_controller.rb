@@ -1,6 +1,7 @@
 class UsersController < ApplicationController
   protect_from_forgery with: :null_session
   before_action :set_user, only: [:show]
+  skip_before_action :authenticate_user, only: [:create]
 
   def show
     render json: @user, only: %i[name is_student]
