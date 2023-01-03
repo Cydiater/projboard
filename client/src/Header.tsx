@@ -5,8 +5,6 @@ import {
     Box,
     UnstyledButton,
     Menu,
-    Text,
-    Badge,
     createStyles,
 } from '@mantine/core';
 import LogoPNG from './logo.png';
@@ -20,18 +18,19 @@ import UserInfo from './UserInfo'
 interface UserButtonProps extends React.ComponentPropsWithoutRef<'button'> {
     name: string;
     is_student: boolean;
+    user_id: number;
     icon?: React.ReactNode;
 }
 
 const UserButton = forwardRef<HTMLButtonElement, UserButtonProps>(
-    ({ name, is_student, icon, ...others }: UserButtonProps, ref) => (
+    ({ name, is_student, user_id, icon, ...others }: UserButtonProps, ref) => (
         <UnstyledButton
             ref={ref}
             {...others}
         >
             <Group>
                 <div style={{ flex: 1 }}>
-                    <UserInfo name={name} is_student={is_student} />
+                    <UserInfo id={user_id} name={name} is_student={is_student} />
                 </div>
 
                 {icon || <IconChevronDown size={16} />}
@@ -70,45 +69,40 @@ const useStyles = createStyles((theme) => ({
     },
 }));
 
-export function Header() {
-    const [user, _dispatchUser] = useContext(UserContext);
+interface LinkButtonProps {
+    link: string;
+    label: string;
+    active: string;
+    setActive: (arg0: string) => void,
+}
+
+const LinkButton = (props: LinkButtonProps) => {
     const { classes, cx } = useStyles();
+    const { link, label, active, setActive } = props;
     const navigate = useNavigate();
-    const { logout } = useAuth();
+    return (
 
-
-    interface Link {
-        link: string;
-        label: string;
-    }
-
-    const links: Link[] = [
-        {
-            link: "/",
-            label: "Home",
-        },
-        {
-            link: "/my",
-            label: "My Projects"
-        }
-    ];
-
-    const [active, setActive] = useState(links[0].link);
-
-    const items = links.map((link) => (
         <a
-            key={link.label}
-            href={link.link}
-            className={cx(classes.link, { [classes.linkActive]: active === link.link })}
+            key={label}
+            href={link}
+            className={cx(classes.link, { [classes.linkActive]: active === label })}
             onClick={(event) => {
                 event.preventDefault();
-                setActive(link.link);
-                navigate(link.link);
+                setActive(label);
+                navigate(link);
             }}
         >
-            {link.label}
+            {label}
         </a>
-    ));
+    )
+
+}
+
+export function Header() {
+    const [user, _dispatchUser] = useContext(UserContext);
+    const { logout } = useAuth();
+    const navigate = useNavigate();
+    const [active, setActive] = useState("Home");
 
     return (
         <Box>
@@ -122,7 +116,8 @@ export function Header() {
                     />
 
                     {user.name.length > 0 && <Group>
-                        {items}
+                        <LinkButton link="/" label="Home" active={active} setActive={setActive}/>
+                        <LinkButton link={`/users/${user.id}`} label="My Projects" active={active} setActive={setActive}/>
                     </Group>}
 
                     {user.name.length == 0 && <Group>
@@ -143,6 +138,7 @@ export function Header() {
                                 <UserButton
                                     name={user.name}
                                     is_student={user.is_student}
+                                    user_id={user.id}
                                 />
                             </Menu.Target>
 

@@ -1,7 +1,10 @@
 Rails.application.routes.draw do
   scope '/api', defaults: { format: :json } do
     resources :users do
-      resources :projects
+      resources :projects do
+        resources :discussions
+      end
+      resources :discussions
     end
     post 'auth/login', to: 'authentication#login'
     get 'auth/refresh', to: 'authentication#refresh'

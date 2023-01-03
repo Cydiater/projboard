@@ -17,24 +17,25 @@ interface TokenInfo {
     name: string;
     is_student: boolean;
     exp: string;
+    id: number,
 }
 
 const AuthContext = React.createContext<any>({});
 
 const loginRequest = async ({username, password}: LoginReq): Promise<TokenInfo> => {
-    const { token, exp, name, is_student } = await login(
+    const { token, exp, name, is_student, id } = await login(
         username,
         password
     );
-    return { token, exp, name, is_student };
+    return { token, exp, name, is_student, id };
 };
 
 const refreshRequest = async (): Promise<TokenInfo> => {
     const resp = await axios.get<TokenInfo>(
         auth_refresh_url
     );
-    const { token, exp, name, is_student } = resp.data;
-    return { token, exp, name, is_student };
+    const { token, exp, name, is_student, id } = resp.data;
+    return { token, exp, name, is_student, id };
 };
 
 function AuthProvider(props: any) {
@@ -52,22 +53,25 @@ function AuthProvider(props: any) {
         localStorage.setItem('token', data.token);
         setTokenExpires(data.exp);
         if (user.name.length === 0) {
-            showNotification({
-                message: "Login succeed",
-            });
-            navigate("/");
             dispatchUser({
                 type: "set",
                 payload: {
                     name: data.name,
                     is_student: data.is_student,
+                    id: data.id,
                 }
             })
         }
     }
 
     const loginQuery = useMutation(loginRequest, {
-        onSuccess: authed,
+        onSuccess: (d) => {
+            authed(d);
+            showNotification({
+                message: "Login succeed",
+            });
+            navigate("/");
+        },
         onError: (error: Error) => {
             showNotification({
                 color: 'red',
@@ -80,7 +84,7 @@ function AuthProvider(props: any) {
     useEffect(() => {
         axios.interceptors.request.use(
             (config: AxiosRequestConfig): AxiosRequestConfig => {
-                config.headers!.authorization = `Bearer ${accessTokenRef.current}`;
+                config.headers!.Authorization = `Bearer ${accessTokenRef.current}`;
                 config.withCredentials = true;
                 return config;
             }
@@ -100,6 +104,7 @@ function AuthProvider(props: any) {
         queryFn: refreshRequest,
         queryKey: ["refresh"],
         onSuccess: authed,
+        refetchOnWindowFocus: false,
         refetchInterval: 1 * 60 * 60 * 1000, // refetch after one hour 
         enabled: accessTokenRef.current != undefined && accessTokenRef.current.length > 0,
     });

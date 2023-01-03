@@ -12,7 +12,7 @@ class AuthenticationController < ApplicationController
         exp: time.strftime('%m-%d-%Y %H:%M'),
         name: @user.name,
         is_student: @user.is_student,
-        user_id: @user.id
+        id: @user.id
       }, status: :ok
     else
       render json: {
@@ -29,7 +29,7 @@ class AuthenticationController < ApplicationController
       exp: time.strftime('%m-%d-%Y %H:%M'),
       name: @current_user.name,
       is_student: @current_user.is_student,
-      user_id: @current_user.id
+      id: @current_user.id
     }, status: :ok
   end
 end

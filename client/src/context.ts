@@ -3,6 +3,7 @@ import { createContext, Dispatch } from 'react';
 interface User {
     name: string;
     is_student: boolean;
+    id: number;
 }
 
 function userReducer(state: User, action: any): User {
@@ -24,6 +25,7 @@ function userReducer(state: User, action: any): User {
 const initUser: User = {
     name: '',
     is_student: false,
+    id: 0,
 }
 
 const UserContext = createContext<[User, Dispatch<any>]>([initUser, () => null]);
