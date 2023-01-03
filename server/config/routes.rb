@@ -3,8 +3,10 @@ Rails.application.routes.draw do
     resources :users do
       resources :projects do
         resources :discussions
+        resources :attentions
       end
       resources :discussions
+      resources :attentions
     end
     post 'auth/login', to: 'authentication#login'
     get 'auth/refresh', to: 'authentication#refresh'

@@ -1,7 +1,8 @@
 class User < ApplicationRecord
   has_secure_password
-  has_many :projects
-  has_many :discussions
+  has_many :projects, dependent: :destroy
+  has_many :discussions, dependent: :destroy
+  has_many :attentions, dependent: :destroy
 
   validates :name, presence: true, uniqueness: true, length: {
     minimum: 3,

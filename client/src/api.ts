@@ -1,4 +1,6 @@
 import axios, { isAxiosError } from 'axios';
+import { UserContext } from './context';
+import { useContext } from 'react';
 
 const signup_uri = "/api/users/";
 const login_url = "/api/auth/login/";
@@ -85,12 +87,14 @@ interface ProjectInfo {
     project_id: number;
     user_id: number;
     user_name: string;
-    user_is_student: boolean,
-    project_created_at: string,
+    user_is_student: boolean;
+    project_created_at: string;
+    attention_count: number;
+    attention_id: number;
 };
 
-async function get_projects(): Promise<ProjectInfo[]> {
-    const resp = await axios.get(projects_url)
+async function get_projects(user_id: any): Promise<ProjectInfo[]> {
+    const resp = await axios.get(user_id.current == 0 ? projects_url : projects_url + `?user_id=${user_id.current}`)
     return resp.data
 }
 
@@ -173,6 +177,34 @@ async function delete_discussion(user_id: number, id: number): Promise<void> {
     }
 }
 
+async function delete_attention(user_id: number, attention_id: number): Promise<void> {
+    const url = users_url + "/" + user_id + "/attentions/" + attention_id;
+    try {
+        return await axios.delete(url);
+    } catch(e: any) {
+        if (isAxiosError(e)) {
+            if (e.response!.status == 401)
+                throw Error("You are not allowed to follow project for other user")
+        }
+        throw Error("Server error");
+    }
+}
+
+async function create_attention(user_id: number, project_id: number): Promise<void> {
+    const url = users_url + "/" + user_id + "/attentions";
+    const params = new URLSearchParams();
+    params.append("attention[project_id]", project_id.toString());
+    try {
+        return await axios.post(url, params);
+    } catch(e: any) {
+        if (isAxiosError(e)) {
+            if (e.response!.status == 401)
+                throw Error("You are not allowed to unfollow project for other user")
+        }
+        throw Error("Server error");
+    }
+}
+
 export { 
     create_user, 
     login, 
@@ -188,4 +220,6 @@ export {
     create_discussion_for,
     delete_project,
     delete_discussion,
+    create_attention,
+    delete_attention,
 };

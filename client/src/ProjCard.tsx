@@ -1,7 +1,8 @@
 import UserInfo from './UserInfo';
 import TimeAgo from 'javascript-time-ago'
-import { createStyles, Button, Paper, Title, Divider, Text } from '@mantine/core';
-import { type ProjectInfo, delete_project } from './api';
+import { createStyles, Button, Paper, Title, Divider, Text, ActionIcon } from '@mantine/core';
+import { type ProjectInfo, delete_project, create_attention, delete_attention } from './api';
+import { IconStar } from '@tabler/icons';
 import { useContext } from 'react';
 import { UserContext } from './context';
 import { useMutation, useQueryClient } from 'react-query';
@@ -55,9 +56,51 @@ export default function(props: ProjCardProps) {
         }
     });
 
+    interface FollowArg {
+        user_id: number;
+        project_id: number;
+    }
+
+    const do_follow = useMutation((a: FollowArg) => create_attention(a.user_id, a.project_id), {
+        onSuccess: () => {
+            showNotification({
+                message: "Follow succeed",
+            });
+            queryClient.invalidateQueries(queryInvalidateKey);
+        },
+        onError: (e: Error) => {
+            showNotification({
+                title: "Follow failed",
+                message: e.message,
+                color: 'red',
+            });
+        }
+    })
+
+    interface UnfollowArg {
+        user_id: number;
+        attention_id: number;
+    }
+
+    const do_unfollow = useMutation((a: UnfollowArg) => delete_attention(a.user_id, a.attention_id), {
+        onSuccess: () => {
+            showNotification({
+                message: "Unfollow succeed",
+            });
+            queryClient.invalidateQueries(queryInvalidateKey);
+        },
+        onError: (e: Error) => {
+            showNotification({
+                title: "Unfollow failed",
+                message: e.message,
+                color: 'red',
+            });
+        }
+    })
+
     return (
         <Paper withBorder className={classes.paper}>
-            <div className="flex content-center justify-content-center mb-2">
+            <div className="flex items-center mb-2">
                 <Title 
                     order={2} 
                     className="cursor-pointer" 
@@ -77,13 +120,28 @@ export default function(props: ProjCardProps) {
                 {info.info}
             </Text>
             <div className="grow" />
-            <div className="flex space-x-3">
+            <div className="flex space-x-3 items-center">
+                {user.name.length> 0 && (
+                    <ActionIcon 
+                        variant={info.attention_id > 0 ? "filled" : "subtle"} 
+                        size="sm" 
+                        loading={do_follow.isLoading || do_unfollow.isLoading}
+                        className="ml-3"
+                        onClick={() => {
+                                if (info.attention_id > 0) {
+                            do_unfollow.mutate({user_id: user.id, attention_id: info.attention_id})
+                        } else {
+                            do_follow.mutate({user_id: user.id, project_id: info.project_id})
+                        }}}
+                    >
+                        <IconStar />
+                    </ActionIcon>)}
                 {writable() && 
-                <Button variant="subtle" size="xs"
-                    onClick={() => navigate(`/users/${info.user_id}/projects/${info.project_id}?edit_mode=true`)}
-                >
-                    Edit
-                </Button>}
+                    <Button variant="subtle" size="xs"
+                        onClick={() => navigate(`/users/${info.user_id}/projects/${info.project_id}?edit_mode=true`)}
+                    >
+                        Edit
+                    </Button>}
                 {writable() && 
                     <Button 
                         variant="subtle" 
@@ -99,7 +157,7 @@ export default function(props: ProjCardProps) {
                     </Button>}
                 <div className='grow'/>
                 <Text c="dimmed" fz="sm" fs="italic">
-                    {ago_text}
+                    {`${ago_text}, ${info.attention_count} follows`}
                 </Text>
             </div>
         </Paper>

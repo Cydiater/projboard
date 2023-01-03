@@ -1,7 +1,7 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import { configure } from 'axios-hooks';
 import React, { useContext, useEffect } from 'react';
-import { useMutation, useQuery } from 'react-query';
+import { QueryClient, useMutation, useQuery, useQueryClient } from 'react-query';
 import { login, auth_refresh_url } from './api';
 import { UserContext } from './context';
 import { showNotification } from '@mantine/notifications';
@@ -47,6 +47,7 @@ function AuthProvider(props: any) {
     const [_tokenExpires, setTokenExpires] = React.useState<string>();
     const navigate = useNavigate();
     const [user, dispatchUser] = useContext(UserContext);
+    const queryClient = useQueryClient();
 
     const authed = (data: TokenInfo) => {
         accessTokenRef.current = data.token;
@@ -60,7 +61,10 @@ function AuthProvider(props: any) {
                     is_student: data.is_student,
                     id: data.id,
                 }
-            })
+            });
+            setTimeout(() => {
+                queryClient.invalidateQueries("projects");
+            }, 1000);
         }
     }
 
