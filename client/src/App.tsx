@@ -10,6 +10,10 @@ import { Routes, Route } from 'react-router-dom';
 import { QueryClientProvider, QueryClient } from 'react-query';
 import { NotificationsProvider } from '@mantine/notifications';
 import { AuthProvider } from './auth';
+import TimeAgo from 'javascript-time-ago'
+import en from 'javascript-time-ago/locale/en'
+
+TimeAgo.addDefaultLocale(en)
 
 const queryClient = new QueryClient();
 

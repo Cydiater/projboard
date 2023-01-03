@@ -1,5 +1,4 @@
 import UserInfo from './UserInfo';
-import en from 'javascript-time-ago/locale/en'
 import TimeAgo from 'javascript-time-ago'
 import { createStyles, Button, Paper, Title, Divider, Text } from '@mantine/core';
 import { type ProjectInfo, delete_project } from './api';
@@ -8,8 +7,6 @@ import { UserContext } from './context';
 import { useMutation, useQueryClient } from 'react-query';
 import { showNotification } from '@mantine/notifications';
 import { useNavigate } from 'react-router-dom';
-
-TimeAgo.addDefaultLocale(en)
 
 interface ProjCardProps {
     info: ProjectInfo;
@@ -82,7 +79,9 @@ export default function(props: ProjCardProps) {
             <div className="grow" />
             <div className="flex space-x-3">
                 {writable() && 
-                <Button variant="subtle" size="xs">
+                <Button variant="subtle" size="xs"
+                    onClick={() => navigate(`/users/${info.user_id}/projects/${info.project_id}?edit_mode=true`)}
+                >
                     Edit
                 </Button>}
                 {writable() && 

@@ -12,9 +12,26 @@ class ProjectsController < ApplicationController
     end
   end
 
+  def update
+    @user = User.find(params[:user_id])
+    if @current_user.id == params[:user_id].to_i
+      @project = @user.projects.update(project_params)
+      head :ok
+    else
+      head :unauthorized
+    end
+  end
+
   def show
     @project = Project.find(params[:id])
-    render json: @project, only: %i[title info id]
+    render json: {
+      title: @project.title,
+      info: @project.info,
+      project_id: @project.id,
+      user_id: @project.user.id,
+      user_name: @project.user.name,
+      user_is_student: @project.user.is_student
+    }
   end
 
   def destroy

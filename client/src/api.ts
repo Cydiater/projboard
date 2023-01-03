@@ -85,6 +85,7 @@ interface ProjectInfo {
     project_id: number;
     user_id: number;
     user_name: string;
+    user_is_student: boolean,
     project_created_at: string,
 };
 
@@ -99,6 +100,24 @@ async function get_projects_for(user_id: number): Promise<ProjectInfo[]> {
     return resp.data;
 }
 
+async function update_project_for(user_id: number, project_id: number, title: string, info: string): Promise<void> {
+
+    const url = users_url + "/" + user_id + "/projects/" + project_id;
+    try {
+        const params = new URLSearchParams();
+        params.append("project[title]", title);
+        params.append("project[info]", info);
+        return await axios.patch(url, params);
+    } catch(e: any) {
+        if (isAxiosError(e)) {
+            if (e.response!.status == 401) {
+                throw Error("You are not allowed to update project for others");
+            } 
+        }
+        throw Error("Server error");
+    }
+}
+
 async function get_project_for(user_id: number, project_id: number): Promise<ProjectInfo> {
     const url = users_url + "/" + user_id + "/projects/" + project_id;
     const resp = await axios.get(url);
@@ -106,7 +125,12 @@ async function get_project_for(user_id: number, project_id: number): Promise<Pro
 }
 
 interface DiscussionInfo {
-
+    id: number;
+    user_id: number;
+    user_name: string;
+    user_is_student: boolean;
+    content: string;
+    created_at: string;
 }
 
 async function get_discussions_for(user_id: number, project_id: number): Promise<DiscussionInfo[]> {
@@ -116,16 +140,52 @@ async function get_discussions_for(user_id: number, project_id: number): Promise
 
 }
 
+async function create_discussion_for(
+    user_id: number, 
+    project_id: number,
+    content: string,
+): Promise<void> {
+    const url = users_url + "/" + user_id + "/discussions/";
+    const params = new URLSearchParams();
+    params.append("discussion[content]", content);
+    params.append("discussion[project_id]", project_id.toString());
+    try {
+        return await axios.post(url, params);
+    } catch(e: any) {
+        if (isAxiosError(e)) {
+            if (e.response!.status == 401)
+                throw Error("You are not allowed to create discussion for other user")
+        }
+        throw Error("Server error");
+    }
+}
+
+async function delete_discussion(user_id: number, id: number): Promise<void> {
+    const url = users_url + "/" + user_id + "/discussions/" + id;
+    try {
+        return await axios.delete(url);
+    } catch(e: any) {
+        if (isAxiosError(e)) {
+            if (e.response!.status == 401)
+                throw Error("You are not allowed to delete discussion of other user")
+        }
+        throw Error("Server error");
+    }
+}
+
 export { 
     create_user, 
     login, 
     auth_refresh_url, 
     get_projects, 
     get_project_for,
+    update_project_for,
     get_projects_for, 
     get_discussions_for,
     type ProjectInfo, 
     type DiscussionInfo,
     create_project, 
-    delete_project 
+    create_discussion_for,
+    delete_project,
+    delete_discussion,
 };
