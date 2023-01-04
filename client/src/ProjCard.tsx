@@ -121,7 +121,7 @@ export default function(props: ProjCardProps) {
             </Text>
             <div className="grow" />
             <div className="flex space-x-3 items-center">
-                {user.name.length> 0 && (
+                {user.name.length > 0 && (
                     <ActionIcon 
                         variant={info.attention_id > 0 ? "filled" : "subtle"} 
                         size="sm" 
@@ -157,7 +157,7 @@ export default function(props: ProjCardProps) {
                     </Button>}
                 <div className='grow'/>
                 <Text c="dimmed" fz="sm" fs="italic">
-                    {`${ago_text}, ${info.attention_count} follows`}
+                    {`${ago_text}, ${info.attention_count} follows, ${info.discussion_count} discussions`}
                 </Text>
             </div>
         </Paper>

@@ -11,7 +11,7 @@ import {
 } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import { create_user } from './api';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useMutation } from 'react-query';
 import { showNotification } from '@mantine/notifications';
 import { useNavigate } from 'react-router-dom';

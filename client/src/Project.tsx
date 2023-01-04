@@ -194,7 +194,7 @@ export default function Project() {
     }
 
     return (
-        <div className='flex flex-col mt-5 space-y-3 items-center'>
+        <div className='flex flex-col my-5 space-y-3 items-center'>
             <Paper 
 
                 className="flex flex-col space-y-2 p-2 mx-auto"

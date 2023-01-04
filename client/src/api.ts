@@ -91,6 +91,7 @@ interface ProjectInfo {
     project_created_at: string;
     attention_count: number;
     attention_id: number;
+    discussion_count: number;
 };
 
 async function get_projects(user_id: any): Promise<ProjectInfo[]> {

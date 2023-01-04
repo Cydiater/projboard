@@ -45,6 +45,7 @@ class ProjectsController < ApplicationController
     @user = User.find(params[:user_id])
     if @user.is_student
       x = Project
+          .left_outer_joins(:discussions)
           .joins(:user)
           .left_outer_joins(:attentions)
           .select("users.id as user_id,
@@ -52,6 +53,7 @@ class ProjectsController < ApplicationController
                 users.name as user_name,
                 projects.title as title,
                 projects.info as info,
+                COUNT(discussions.id) as discussion_count,
                 MAX(CASE WHEN attentions.user_id = #{@user.id} THEN attentions.id ELSE null END) as attention_id,
                 COUNT(attentions.id) as attention_count,
                 projects.created_at as project_created_at")
@@ -61,6 +63,7 @@ class ProjectsController < ApplicationController
       render json: x.joins(:attentions).where("attentions.user_id = #{@user.id}")
     else
       render json: Project
+        .left_outer_joins(:discussions)
         .joins(:user)
         .left_outer_joins(:attentions)
         .select("users.id as user_id,
@@ -68,6 +71,7 @@ class ProjectsController < ApplicationController
               users.name as user_name,
               projects.title as title,
               projects.info as info,
+              COUNT(discussions.id) as discussion_count,
               MAX(CASE WHEN attentions.user_id = #{@user.id} THEN attentions.id ELSE null END) as attention_id,
               COUNT(attentions.id) as attention_count,
               projects.created_at as project_created_at")
@@ -82,6 +86,7 @@ class ProjectsController < ApplicationController
     if params[:user_id].present?
       uid = params[:user_id].to_i
       render json: Project
+        .left_outer_joins(:discussions)
         .joins(:user)
         .left_outer_joins(:attentions)
         .select("users.id as user_id,
@@ -89,6 +94,7 @@ class ProjectsController < ApplicationController
               users.name as user_name,
               projects.title as title,
               projects.info as info,
+              COUNT(discussions.id) as discussion_count,
               MAX(CASE WHEN attentions.user_id = #{uid} THEN attentions.id ELSE null END) as attention_id,
               COUNT(attentions.id) as attention_count,
               projects.created_at as project_created_at")
@@ -97,11 +103,13 @@ class ProjectsController < ApplicationController
         .reverse_order
     else
       render json: Project
+        .left_outer_joins(:discussions)
         .joins(:user)
         .left_outer_joins(:attentions)
         .select("users.id as user_id,
               projects.id as project_id,
               users.name as user_name,
+              COUNT(discussions.id) as discussion_count,
               projects.title as title,
               projects.info as info,
               COUNT(attentions.id) as attention_count,

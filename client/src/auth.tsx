@@ -62,9 +62,6 @@ function AuthProvider(props: any) {
                     id: data.id,
                 }
             });
-            setTimeout(() => {
-                queryClient.invalidateQueries("projects");
-            }, 1000);
         }
     }
 
@@ -104,7 +101,7 @@ function AuthProvider(props: any) {
         configure({ axios });
     }, []);
 
-    useQuery({
+    const refreshQuery = useQuery({
         queryFn: refreshRequest,
         queryKey: ["refresh"],
         onSuccess: authed,
@@ -124,6 +121,7 @@ function AuthProvider(props: any) {
         <AuthContext.Provider
             value={{
                 do_login: loginQuery,
+                    do_refresh: refreshQuery,
                     logout,
             }}
             {...props}

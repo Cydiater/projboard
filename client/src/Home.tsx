@@ -9,12 +9,17 @@ import ProjCard from './ProjCard';
 export default function Home() {
     const [user, _] = useContext(UserContext);
     const user_id = useRef(user.id);
-    const query = useQuery('projects', () => get_projects(user_id), {
+    const query = useQuery(['projects', user_id], () => get_projects(user_id), {
         refetchOnWindowFocus: false,
+        enabled: user_id.current > 0 || localStorage.getItem("token") == null,
     });
 
     useEffect(() => {
+        const current = user_id.current;
         user_id.current = user.id;
+        if (current == 0 && user.id > 0) {
+            query.refetch();
+        }
     });
 
     return (
