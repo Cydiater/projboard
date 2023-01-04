@@ -4,6 +4,7 @@ WORKDIR /app
 
 COPY . /app
 
+RUN yarn config set registry https://registry.npm.taobao.org/
 RUN yarn && yarn run build
 
 FROM nginx:1.15
